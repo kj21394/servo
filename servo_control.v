@@ -87,10 +87,15 @@ wire 				txd;
 wire	 [7:0]   uart_data;
 wire	         rdempty;
 wire	         write;
+reg           m_write; 
 reg	     	   read;
 reg	         cnt;
-wire [23:0]     data;
-reg 				data_count;
+reg  [7:0]     data1;
+wire [7:0]		d1;
+reg  [7:0]     data2;
+reg  [7:0]     data3;
+reg 				data_full;
+reg  [1:0]		data_count;
 //=======================================================
 //  Structural coding
 //=======================================================
@@ -101,8 +106,8 @@ uart_control UART0(
 	.clk(FPGA_CLK1_50),
 	.reset_n(KEY[0]),
 	// tx
-	.write(write),
-	.writedata(uart_data),
+	.write(m_write),
+	.writedata(data1),
 
 	// rx
 	.read(read),
@@ -125,33 +130,47 @@ begin
 end
 assign  write = ( read & (~rdempty) );
 
-always @(posedge write)
-begin 
-	
-end 
 
 always@(posedge FPGA_CLK1_50 or negedge KEY[0])
 begin
   if(!KEY[0])
+  begin
     LED <= 0;
+	 data_count <= 2'b00;
+  end
   else if(KEY[0] & write)
   begin
-    case(uart_data)
-	 8'h30:LED <= LED | 8'd1;
-	 8'h31:LED <= LED | 8'd2;
-	 8'h32:LED <= LED | 8'd4;
-	 8'h33:LED <= LED | 8'd8;
-	 8'h34:LED <= LED & 8'he;
-	 8'h35:LED <= LED & 8'hd;
-	 8'h36:LED <= LED & 8'hb;
-	 8'h37:LED <= LED & 8'h7;
-	 8'h38:LED <= LED | 8'hf;
-	 8'h39:LED <= LED & 8'h0;
-	 default : LED <= LED;
-	 endcase
+	 if (data_count == 2'b00)
+	 begin 
+		data1 <= uart_data[7:0];
+
+	 end
+	 else if (data_count == 2'b01)
+	 begin
+	   data2 <= uart_data[7:0]; 
+		
+	 end
+	 else if (data_count == 2'b10)
+	 begin
+		data3[7:0] <= uart_data[7:0];
+	   data_count = 2'b00;
+	   m_write = 1;	
+	 end
+	 if (data1 == 8'h36 && data2 == 8'h38)
+	 begin 
+		LED <= LED | 8'hf;
+	 end 
+	 else
+	 begin
+		LED[7] <= 1;
+	 end 
+	 data_count = data_count + 2'b01;
   end
   else
+  begin
     LED <= LED;
+	 m_write = 0;
+  end
 end
 
 
