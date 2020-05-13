@@ -136,27 +136,26 @@ begin
   if(!KEY[0])
   begin
     LED <= 0;
-	 data_count <= 2'b00;
+	 data_count = 2'b00;
   end
   else if(KEY[0] & write)
   begin
-	 if (data_count == 2'b00)
+    data_count = data_count + 2'b01;
+	 if (data_count == 2'b01)
 	 begin 
 		data1 <= uart_data[7:0];
-
-	 end
-	 else if (data_count == 2'b01)
-	 begin
-	   data2 <= uart_data[7:0]; 
-		
 	 end
 	 else if (data_count == 2'b10)
 	 begin
-		data3[7:0] <= uart_data[7:0];
+	   data2 <= uart_data[7:0]; 
+	 end
+	 else if (data_count == 2'b11)
+	 begin
+		data3 <= uart_data[7:0];
 	   data_count = 2'b00;
 	   m_write = 1;	
 	 end
-	 if (data1 == 8'h36 && data2 == 8'h38)
+	 if (data1 == 8'h36 && data2 == 8'h38 && data3 == 8'h34)
 	 begin 
 		LED <= LED | 8'hf;
 	 end 
@@ -164,7 +163,6 @@ begin
 	 begin
 		LED[7] <= 1;
 	 end 
-	 data_count = data_count + 2'b01;
   end
   else
   begin
