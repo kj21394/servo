@@ -96,6 +96,40 @@ reg  [7:0]     data2;
 reg  [7:0]     data3;
 reg 				data_full;
 reg  [1:0]		data_count;
+integer X;
+integer y;
+integer z;
+
+wire [7:0] angle;
+wire [2:0] speed;
+wire [7:0] oangle;
+wire pwm; 
+wire rst; 
+wire [31:0] pwmangle;
+assign GPIO_1[0] = pwm; 
+assign rst = 1;// ~SW[2];
+`define DUR_CLOCK_NUM ( 50000000/50)            // clock count in 20 ms
+`define DEGREE_MAX    ( `DUR_CLOCK_NUM*25/200) // 2.5 ms 125000
+`define DEGREE_MIN    ( `DUR_CLOCK_NUM*5/200)  // 0.5 ms 25000
+wire [31:0] PwmAngle;
+
+function integer a(reg [7:0] inp_data) begin
+	integer num;
+	case(inp_data)
+		8'h30 : num <= 0;
+		8'h31 : num <= 1;
+		8'h32 : num <= 2;
+		8'h33 : num <= 3;
+		8'h34 : num <= 4;
+		8'h35 : num <= 5;
+		8'h36 : num <= 6;
+		8'h37 : num <= 7;
+		8'h38 : num <= 8;
+		8'h39 : num <= 9;
+		default: num <= 0;  
+	endcase
+end
+endfunction
 //=======================================================
 //  Structural coding
 //=======================================================
@@ -107,7 +141,7 @@ uart_control UART0(
 	.reset_n(KEY[0]),
 	// tx
 	.write(m_write),
-	.writedata(data1),
+	.writedata(data3),
 
 	// rx
 	.read(read),
@@ -143,21 +177,29 @@ begin
 	 if (data_count == 2'b00)
 	 begin 
 		data1 <= uart_data[7:0];
+		x <= a(data1) * 100;
 	 end
 	 else if (data_count == 2'b01)
 	 begin
-	   data2 <= uart_data[7:0]; 
+	   data2 <= uart_data[7:0];
+		y <= a(data2) * 10;
 	 end
 	 else if (data_count == 2'b10)
 	 begin
 		data3 <= uart_data[7:0];
+		z <= a(data3);
+		xyz <= x + y + z;
+		if (xyz <= MAX_ANGLE)
+			angle <= MAX_ANGLE;
+		else
+			angel <= xyz;
 	   m_write = 1;	
 	 end
 	 else if (data_count == 2'b11)
 	 begin 
 		data_count <= 2'b00;
 	 end
-	 if (data1 == 8'h36 && data2 == 8'h38 && data3 == 8'h34)
+	 if (x == 1 && y == 2 && z == 5 && xyz == 125)
 	 begin 
 		LED <= LED | 8'hf;
 	 end 
@@ -175,18 +217,7 @@ begin
 end
 
 
-wire [7:0] angle;
-wire [2:0] speed;
-wire [7:0] oangle;
-wire pwm; 
-wire rst; 
-wire [31:0] pwmangle;
-assign GPIO_1[0] = pwm; 
-assign rst = 1;// ~SW[2];
-`define DUR_CLOCK_NUM ( 50000000/50)            // clock count in 20 ms
-`define DEGREE_MAX    ( `DUR_CLOCK_NUM*25/200) // 2.5 ms 125000
-`define DEGREE_MIN    ( `DUR_CLOCK_NUM*5/200)  // 0.5 ms 25000
-wire [31:0] PwmAngle;
+
 
 
 interface h0(
