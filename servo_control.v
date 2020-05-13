@@ -95,7 +95,7 @@ wire [7:0]		d1;
 reg  [7:0]     data2;
 reg  [7:0]     data3;
 reg 				data_full;
-reg  [1:0]		data_count = 2'b00;
+reg  [1:0]		data_count;
 //=======================================================
 //  Structural coding
 //=======================================================
@@ -135,9 +135,8 @@ always@(posedge FPGA_CLK1_50 or negedge KEY[0])
 begin
   if(!KEY[0])
   begin
-    
+    LED <= 0;
 	 data_count <= 2'b00;
-	 m_write = 0;
   end
   else if(KEY[0] & write)
   begin
@@ -154,34 +153,27 @@ begin
 		data3 <= uart_data[7:0];
 	   m_write = 1;	
 	 end
-	 data_count <= data_count + 2'b01;
-  end
-  else
-  begin
-	 m_write = 0;
-  end
-end
-
-always@(posedge FPGA_CLK1_50)
-begin 
-if (~m_write)
-begin 
-	LED <= 0;
-end 
-else
- begin
-   if (data1 == 8'h36 && data2 == 8'h38 && data3 == 8'h34)
+	 else if (data_count == 2'b11)
+	 begin 
+		data_count <= 2'b00;
+	 end
+	 if (data1 == 8'h36 && data2 == 8'h38 && data3 == 8'h34)
 	 begin 
 		LED <= LED | 8'hf;
 	 end 
 	 else
 	 begin
 		LED[7] <= 1;
-	 end  
-	LED <= LED;
-	data_count <= 2'b00;
- end 
-end 
+	 end
+    data_count <= data_count + 2'b01; 
+  end
+  else
+  begin
+    LED <= LED;
+	 m_write = 0;
+  end
+end
+
 
 wire [7:0] angle;
 wire [2:0] speed;
