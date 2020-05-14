@@ -36,7 +36,7 @@ begin
 				out_angle <= out_angle + `AdjAngle;
 			end
 			else
-				count <= count + speed + 2; 
+				count <= count + speed + 1; 
 		end	
 		else if (angle < out_angle)
 		begin 
@@ -46,7 +46,7 @@ begin
 				out_angle <= out_angle - `AdjAngle;
 			end
 			else
-				count <= count + speed + 2; 
+				count <= count + speed + 1; 
 		end
   end
 end
