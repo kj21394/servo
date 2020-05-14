@@ -5,136 +5,47 @@
 
 module servo_control(
 
-	//////////// ADC //////////
-	output		          		ADC_CONVST,
-	output		          		ADC_SCK,
-	output		          		ADC_SDI,
-	input 		          		ADC_SDO,
-
-	//////////// ARDUINO //////////
-	inout 		    [15:0]		ARDUINO_IO,
-	inout 		          		ARDUINO_RESET_N,
-
 	//////////// CLOCK //////////
 	input 		          		FPGA_CLK1_50,
 	input 		          		FPGA_CLK2_50,
 	input 		          		FPGA_CLK3_50,
 
-	//////////// HDMI //////////
-	inout 		          		HDMI_I2C_SCL,
-	inout 		          		HDMI_I2C_SDA,
-	inout 		          		HDMI_I2S,
-	inout 		          		HDMI_LRCLK,
-	inout 		          		HDMI_MCLK,
-	inout 		          		HDMI_SCLK,
-	output		          		HDMI_TX_CLK,
-	output		          		HDMI_TX_DE,
-	output		    [23:0]		HDMI_TX_D,
-	output		          		HDMI_TX_HS,
-	input 		          		HDMI_TX_INT,
-	output		          		HDMI_TX_VS,
-
 	//////////// KEY //////////
 	input 		     [1:0]		KEY,
 
 	//////////// LED //////////
-	output		reg  [7:0]		LED,
+	output		  reg   [7:0]		LED,
 
 	//////////// SW //////////
 	input 		     [3:0]		SW,
 
-	//////////// GPIO_0, GPIO connect to RFS - RF and Sensor //////////
-	inout 		          		BT_KEY,
-	input 		          		BT_UART_RX,
-	output		          		BT_UART_TX,
-	input 		          		LSENSOR_INT,
-	inout 		          		LSENSOR_SCL,
-	inout 		          		LSENSOR_SDA,
-	inout 		          		MPU_AD0_SDO,
-	output		          		MPU_CS_n,
-	output		          		MPU_FSYNC,
-	input 		          		MPU_INT,
-	inout 		          		MPU_SCL_SCLK,
-	inout 		          		MPU_SDA_SDI,
-	input 		          		RH_TEMP_DRDY_n,
-	inout 		          		RH_TEMP_I2C_SCL,
-	inout 		          		RH_TEMP_I2C_SDA,
-	inout 		     [7:0]		TMD_D,
-	input 		          		UART2USB_CTS,
-	output		          		UART2USB_RTS,
-	input 		          		UART2USB_RX,
-	output		          		UART2USB_TX,
-	output		          		WIFI_EN,
-	output		          		WIFI_RST_n,
-	input 		          		WIFI_UART0_CTS,
-	output		          		WIFI_UART0_RTS,
-	input 		          		WIFI_UART0_RX,
-	output		          		WIFI_UART0_TX,
-	input 		          		WIFI_UART1_RX,
-	inout            [35:0]    GPIO_1
+	//////////// GPIO_0, GPIO connect to GPIO Default //////////
+	inout 		    [35:0]		GPIO_0,
+
+	//////////// GPIO_1, GPIO connect to GPIO Default //////////
+	inout 		    [35:0]		GPIO_1
 );
 
 
-
-//=======================================================
-//  REG/WIRE declarations
-//=======================================================
-
-wire 				rts; // request to send		  
-wire 				cts; // clear to send
-wire 				rxd;
-wire 				txd;
-wire	 [7:0]   uart_data;
-wire	         rdempty;
-wire	         write;
-reg           m_write; 
-reg	     	   read;
-reg	         cnt;
-reg  [7:0]     data1;
-wire [7:0]		d1;
-reg  [7:0]     data2;
-reg  [7:0]     data3;
-reg 				data_full;
-reg  [1:0]		data_count;
-integer X;
-integer y;
-integer z;
-
-wire [7:0] angle;
-wire [2:0] speed;
-wire [7:0] oangle;
-wire pwm; 
-wire rst; 
-wire [31:0] pwmangle;
-assign GPIO_1[0] = pwm; 
-assign rst = 1;// ~SW[2];
-`define DUR_CLOCK_NUM ( 50000000/50)            // clock count in 20 ms
-`define DEGREE_MAX    ( `DUR_CLOCK_NUM*25/200) // 2.5 ms 125000
-`define DEGREE_MIN    ( `DUR_CLOCK_NUM*5/200)  // 0.5 ms 25000
-wire [31:0] PwmAngle;
-
-function integer a(reg [7:0] inp_data) begin
-	integer num;
+function integer num(); 
+input [7:0] inp_data;
+begin
 	case(inp_data)
-		8'h30 : num <= 0;
-		8'h31 : num <= 1;
-		8'h32 : num <= 2;
-		8'h33 : num <= 3;
-		8'h34 : num <= 4;
-		8'h35 : num <= 5;
-		8'h36 : num <= 6;
-		8'h37 : num <= 7;
-		8'h38 : num <= 8;
-		8'h39 : num <= 9;
-		default: num <= 0;  
+		8'h30 : num = 0;
+		8'h31 : num = 1;
+		8'h32 : num = 2;
+		8'h33 : num = 3;
+		8'h34 : num = 4;
+		8'h35 : num = 5;
+		8'h36 : num = 6;
+		8'h37 : num = 7;
+		8'h38 : num = 8;
+		8'h39 : num = 9;
+		default: num = 0;  
 	endcase
 end
 endfunction
-//=======================================================
-//  Structural coding
-//=======================================================
 
-// UART Controller
 uart_control UART0(
 
 	.clk(FPGA_CLK1_50),
@@ -149,12 +60,45 @@ uart_control UART0(
 	.rdempty(rdempty),
 	//
 	.uart_clk_25m(cnt),
-	.uart_tx(BT_UART_TX),
-	.uart_rx(BT_UART_RX)
+	.uart_tx(GPIO_0[19]),
+	.uart_rx(GPIO_0[18])
 	
 );	
 
-//read
+//=======================================================
+//  REG/WIRE declarations
+//=======================================================
+wire [7:0]  Angle;
+wire        Pwm_0;
+wire        RESET_N;
+wire 				rts; // request to send		  
+wire 				cts; // clear to send
+wire 				rxd;
+wire 				txd;
+wire	 [7:0]   uart_data;
+wire	         rdempty;
+wire	         write;
+wire [7:0] angle;
+wire [2:0] speed;
+wire [7:0] oangle;
+reg           m_write; 
+reg	     	   read;
+reg	         cnt;
+reg  [7:0]     data1 [0:2];
+reg  [1:0]		data_count = 2'b00;
+reg  [7:0] servo_angle;
+
+
+//=======================================================
+//  Structural coding
+//=======================================================
+assign GPIO_1[0] = Pwm_0;
+assign GPIO_1[2] = Pwm_0;
+assign GPIO_1[4] = Pwm_0;
+
+
+assign RESET_N = 1;// ~SW[2];
+
 always@(posedge FPGA_CLK1_50)
 begin
   if (~rdempty)
@@ -164,7 +108,10 @@ begin
 end
 assign  write = ( read & (~rdempty) );
 
-
+integer x;
+integer y;
+integer z;
+integer xyz;
 always@(posedge FPGA_CLK1_50 or negedge KEY[0])
 begin
   if(!KEY[0])
@@ -174,32 +121,22 @@ begin
   end
   else if(KEY[0] & write)
   begin
-	 if (data_count == 2'b00)
+    data1[data_count] = uart_data[7:0];
+	 if (data_count == 2'b10)
 	 begin 
-		data1 <= uart_data[7:0];
-		x <= a(data1) * 100;
+		x <= num(data1[0]) * 100;
+		y <= num(data1[1]) * 10;
+		z <= num(data1[2]);
+		xyz = x+y+z;
+		m_write <=1;
 	 end
-	 else if (data_count == 2'b01)
-	 begin
-	   data2 <= uart_data[7:0];
-		y <= a(data2) * 10;
-	 end
-	 else if (data_count == 2'b10)
-	 begin
-		data3 <= uart_data[7:0];
-		z <= a(data3);
-		xyz <= x + y + z;
-		if (xyz <= MAX_ANGLE)
-			angle <= MAX_ANGLE;
-		else
-			angel <= xyz;
-	   m_write = 1;	
-	 end
-	 else if (data_count == 2'b11)
+	 else
 	 begin 
 		data_count <= 2'b00;
+		m_write <= 0;
 	 end
-	 if (x == 1 && y == 2 && z == 5 && xyz == 125)
+	 
+	 if (x == 100 && y == 20 && z == 5)
 	 begin 
 		LED <= LED | 8'hf;
 	 end 
@@ -216,35 +153,53 @@ begin
   end
 end
 
+always@(posedge FPGA_CLK1_50)
+begin
+	if (m_write)
+	begin
+		xyz = x + y + z;
+		if (xyz > 180)
+			servo_angle = 180;
+		else
+			servo_angle = xyz;
+	end
+end
+
+assign angle = servo_angle;
 
 
+UI h0(
 
-
-interface h0(
-	.clk(FPGA_CLK1_50),
-	.rst(rst),
-	.angle(angle),
-	.speed(speed),
-	.out_angle(oangle)
+  .clk  ( FPGA_CLK1_50 ),
+  .rst( RESET_N ),
+  .angle  ( angle),
+  .speed   ( speed ),
+  .out_angle( oangle)
 
 );
 
 
+`define DUR_CLOCK_NUM ( 50000000/50)            // clock count in 20 ms
+`define DEGREE_MAX    ( `DUR_CLOCK_NUM*25/200) // 2.5 ms 125000
+`define DEGREE_MIN    ( `DUR_CLOCK_NUM*5/200)  // 0.5 ms 25000
+wire [31:0] PwmAngle;
 assign  PwmAngle = (((`DEGREE_MAX - `DEGREE_MIN)/180)*oangle)+`DEGREE_MIN;
 
-pwm_gen p0(
-	.clk (FPGA_CLK1_50),
-	.rst (rst),
-	.on_period (PwmAngle),
-	.total_dur (DUR_CLOCK_NUM),
-	.PWM (pwm)
+
+PWM_Geneator p0(
+	.clk      ( FPGA_CLK1_50 ),
+	.rst  ( RESET_N      ),
+	//
+	.on_period ( PwmAngle),
+	.total_dur( `DUR_CLOCK_NUM ),
+	//
+	.PWM      ( Pwm_0 )
 );
+
 
 
 always@(posedge FPGA_CLK1_50)
 	cnt <= cnt + 1;
 
-
-	
 
 endmodule

@@ -1,4 +1,4 @@
-module pwm_gen(
+module PWM_Geneator(
 	clk,
 	rst,
 	total_dur,
