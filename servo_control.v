@@ -80,14 +80,19 @@ wire	         rdempty;
 wire	         write;
 wire [7:0] angle;
 wire [2:0] speed;
+
 wire [7:0] oangle;
 reg           m_write; 
 reg	     	   read;
 reg	         cnt;
 reg  [7:0]     data1 [0:2];
+wire [7:0]		d1;
+reg  [7:0]     data2;
+reg  [7:0]     data3;
+reg 				data_full;
 reg  [1:0]		data_count = 2'b00;
 reg  [7:0] servo_angle;
-
+reg  [7:0] servo_speed;
 
 //=======================================================
 //  Structural coding
@@ -124,12 +129,35 @@ begin
     data1[data_count] = uart_data[7:0];
 	 if (data_count == 2'b10)
 	 begin 
-		x <= num(data1[0]) * 100;
-		y <= num(data1[1]) * 10;
-		z <= num(data1[2]);
-		xyz = x+y+z;
-		m_write <=1;
-	 end
+		if (data1[0] == 8'h61 && data1[1] == 8'h61 && data1[2] == 8'h61)
+		begin 
+			servo_speed = servo_speed + 2;
+		end
+		else if (data1[0] == 8'h62 && data1[1] == 8'h62 && data1[2] == 8'h62)
+		begin 
+			servo_speed = servo_speed - 2;
+		end
+		else if (data1[0] == 8'h63 && data1[1] == 8'h63 && data1[2] == 8'h63)
+		begin 
+			m_write <= 2;
+		end
+		else if (data1[0] == 8'h64 && data1[1] == 8'h64 && data1[2] == 8'h64)
+		begin 
+			m_write <= 3;
+		end
+		else if (data1[0] == 8'h65 && data1[1] == 8'h65 && data1[2] == 8'h65)
+		begin 
+			m_write <= 4;
+		end
+		else
+		begin
+			x <= num(data1[0]) * 100;
+			y <= num(data1[1]) * 10;
+			z <= num(data1[2]);
+			xyz = x+y+z;
+			m_write <=1;
+		end
+	 end 
 	 else
 	 begin 
 		data_count <= 2'b00;
@@ -155,7 +183,7 @@ end
 
 always@(posedge FPGA_CLK1_50)
 begin
-	if (m_write)
+	if (m_write==1)
 	begin
 		xyz = x + y + z;
 		if (xyz > 180)
@@ -163,10 +191,22 @@ begin
 		else
 			servo_angle = xyz;
 	end
+	else if (m_write==4)
+	begin 
+		servo_angle = servo_angle;
+	end
+	else if (m_write==5)
+	begin 
+		servo_angle = 180;
+	end
+	else if (m_write==6)
+	begin 
+		servo_angle = 0;
+	end	
 end
 
 assign angle = servo_angle;
-
+assign speed = servo_speed;
 
 UI h0(
 
