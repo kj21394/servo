@@ -52,7 +52,7 @@ uart_control UART0(
 	.reset_n(KEY[0]),
 	// tx
 	.write(m_write),
-	.writedata(data3),
+	.writedata(uart_data),
 
 	// rx
 	.read(read),
@@ -82,7 +82,7 @@ wire [7:0] angle;
 wire [2:0] speed;
 
 wire [7:0] oangle;
-reg           m_write; 
+reg    [7:0]       m_write; 
 reg	     	   read;
 reg	         cnt;
 reg  [7:0]     data1 [0:2];
@@ -126,7 +126,10 @@ begin
   end
   else if(KEY[0] & write)
   begin
-    data1[data_count] = uart_data[7:0];
+	 if (data_count < 2'b11)
+	 begin
+		data1[data_count] = uart_data[7:0];
+	 end
 	 if (data_count == 2'b10)
 	 begin 
 		if (data1[0] == 8'h61 && data1[1] == 8'h61 && data1[2] == 8'h61)
@@ -158,19 +161,10 @@ begin
 			m_write <=1;
 		end
 	 end 
-	 else
+	 else if(data_count == 2'b11)
 	 begin 
 		data_count <= 2'b00;
 		m_write <= 0;
-	 end
-	 
-	 if (x == 100 && y == 20 && z == 5)
-	 begin 
-		LED <= LED | 8'hf;
-	 end 
-	 else
-	 begin
-		LED[7] <= 1;
 	 end
     data_count <= data_count + 2'b01; 
   end
@@ -191,15 +185,15 @@ begin
 		else
 			servo_angle = xyz;
 	end
-	else if (m_write==4)
+	else if (m_write==2)
 	begin 
 		servo_angle = servo_angle;
 	end
-	else if (m_write==5)
+	else if (m_write==3)
 	begin 
 		servo_angle = 180;
 	end
-	else if (m_write==6)
+	else if (m_write==4)
 	begin 
 		servo_angle = 0;
 	end	

@@ -257,52 +257,59 @@ public class MainActivity extends AppCompatActivity {
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String e = result.get(0);
                     String data_send;
+                    String temp;
                     if (e.contains("Angle")||e.contains("angle")){
-                        String numerics = e.replaceAll("[^0-9]", "");
-                        int len = numerics.length();
+                        String num = e.replaceAll("[^0-9]", "");
+                        int len = num.length();
                         if (len == 1)
                         {
-                            data_send = "00"+numerics;
+                            temp = "00"+num+"\n";
+                            data_send = temp;
+                            Toast.makeText(this, data_send, Toast.LENGTH_SHORT).show();
                             sendMessage(data_send);
                         }
                         else if (len == 2)
                         {
-                            data_send = "0"+numerics;
+                            temp = "0"+num+"\n";
+                            data_send = temp;
+                            Toast.makeText(this, data_send, Toast.LENGTH_SHORT).show();
                             sendMessage(data_send);
                         }
-                        else if (len == 3) {
-                            data_send = numerics;
+                        else if (len == 3)
+                        {
+                            data_send = num+"\n";
+                            Toast.makeText(this, data_send, Toast.LENGTH_SHORT).show();
                             sendMessage(data_send);
                         }
                         else
                         {
-                            edittext.setText("Not Valid");
+                            Toast.makeText(this, "Not valid!!!", Toast.LENGTH_SHORT).show();
                         }
 
                     }
                     else if (e.contains("Faster")||e.contains("faster")||e.contains("Fast")||e.contains("fast"))
                     {
-                        sendMessage("aaa");
+                        sendMessage("aaa\n");
                     }
                     else if (e.contains("Slower")||e.contains("slower")||e.contains("Slow")||e.contains("slow"))
                     {
-                        sendMessage("bbb");
+                        sendMessage("bbb\n");
                     }
                     else if (e.contains("Stop")||e.contains("stop"))
                     {
-                        sendMessage("ccc");
+                        sendMessage("ccc\n");
                     }
                     else if (e.contains("Forward")||e.contains("forward"))
                     {
-                        sendMessage("ddd");
+                        sendMessage("ddd\n");
                     }
                     else if (e.contains("Backward")||e.contains("backward")||e.contains("Back")||e.contains("back"))
                     {
-                        sendMessage("eee");
+                        sendMessage("eee\n");
                     }
                     else
                     {
-                        edittext.setText("Not a Valid Command");
+                        Toast.makeText(this, "Not Valid Command!", Toast.LENGTH_SHORT).show();
                     }
                     inputLayout.getEditText().setText(e);
                 }
